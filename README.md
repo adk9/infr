@@ -20,6 +20,23 @@ python -m toy_infer.bench.bench_cli --batch-size 4 --prompt-len 64 --gen-len 64 
 pytest
 ```
 
+## Golden tensors (correctness baselines)
+Golden tensors are saved outputs used to compare correctness as you implement optimizations. Generate them with the provided script after you have weights ready:
+
+1) Generate weights (if you haven’t already):
+```
+python scripts/generate_weights.py --config configs/tiny.json --out artifacts/tiny.npz
+```
+2) Write golden outputs:
+```
+python scripts/verify_correctness.py write-golden --config configs/tiny.json --weights artifacts/tiny.npz --out artifacts/golden_outputs.npz
+```
+
+To compare current outputs against the golden tensors later:
+```
+python scripts/verify_correctness.py verify --config configs/tiny.json --weights artifacts/tiny.npz --golden artifacts/golden_outputs.npz
+```
+
 ## Structure
 - toy_infer/config.py — load/save model config
 - toy_infer/tokenizer.py — byte-level tokenizer
