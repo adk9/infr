@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: toy-infer
+Version: 0.1.0
+Summary: Toy transformer inference baseline for optimization exercises
+Author-email: Demo <demo@example.com>
+Project-URL: homepage, https://example.com
+Requires-Python: >=3.11
+Requires-Dist: numpy>=1.26
+Requires-Dist: typer>=0.12
+Requires-Dist: rich>=13.7
+Requires-Dist: pytest>=7.4

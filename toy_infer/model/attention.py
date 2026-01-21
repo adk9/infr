@@ -80,12 +80,13 @@ class MultiHeadSelfAttention:
             seq_len = k.shape[2]
 
         attn_scores = np.matmul(q, np.transpose(k_full, (0, 1, 3, 2)))
-        scale = 1.0 / np.sqrt(q.shape[-1])
+        scale = np.asarray(1.0 / np.sqrt(q.shape[-1]), dtype=attn_scores.dtype)
         attn_scores *= scale
 
         if not decode:
             mask = self._causal_mask(seq_len)
-            attn_scores = np.where(mask[None, None, :, :], -1e9, attn_scores)
+            neg_inf = np.asarray(-1e9, dtype=attn_scores.dtype)
+            attn_scores = np.where(mask[None, None, :, :], neg_inf, attn_scores)
         else:
             # Only need mask for last position in decode; earlier entries were cached.
             # Build mask for single query position (last token).

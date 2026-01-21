@@ -40,10 +40,17 @@ class TransformerModel:
         self.ln_f = LayerNorm(weights["ln_f_gamma"], weights["ln_f_beta"])
         self.output_proj = Linear(weights["output_projection"])
 
-    def _embed(self, tokens: np.ndarray) -> np.ndarray:
+    def _embed(self, tokens: np.ndarray, pos_offset: int = 0) -> np.ndarray:
+        if tokens.ndim == 3:
+            if tokens.shape[1] == 1:
+                tokens = tokens[:, 0, :]
+            elif tokens.shape[2] == 1:
+                tokens = tokens[:, :, 0]
+            else:
+                raise ValueError("tokens must be [batch, seq] or have a singleton dimension")
         batch, seq_len = tokens.shape
         tok = self.tok_embeddings[tokens]
-        pos = self.pos_embeddings[np.arange(seq_len)]
+        pos = self.pos_embeddings[np.arange(seq_len) + pos_offset]
         pos = np.broadcast_to(pos, tok.shape)
         return tok + pos
 
@@ -67,7 +74,8 @@ class TransformerModel:
 
     def decode_step(self, token: np.ndarray, caches: list[KVCache]) -> tuple[np.ndarray, list[KVCache]]:
         # token: [batch, 1]
-        x = self._embed(token)
+        pos_offset = caches[0].cur_pos if caches else 0
+        x = self._embed(token, pos_offset=pos_offset)
         for i, block in enumerate(self.blocks):
             x, caches[i] = block(x, caches[i], self.config, decode=True)
         x = self.ln_f(x)

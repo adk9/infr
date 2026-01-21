@@ -22,4 +22,5 @@ class ByteTokenizer:
 
 
 def build_tokenizer(vocab_size: int) -> ByteTokenizer:
-    return ByteTokenizer(vocab_size=vocab_size)
+    effective_vocab = max(vocab_size, 256)
+    return ByteTokenizer(vocab_size=effective_vocab)
