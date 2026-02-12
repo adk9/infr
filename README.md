@@ -1,4 +1,4 @@
-# Toy Inference Baseline
+# Toy Inference Engine
 
 A minimal, CPU-only transformer inference stack for optimization exercises. The code is intentionally simple and lightly optimized to expose performance opportunities.
 
@@ -70,3 +70,4 @@ With the provided tiny config on a laptop CPU you should see roughly 20–200 to
 - CPU-only; dependencies: numpy, typer, rich (for pretty tables), pytest.
 - Uses byte-level tokenizer (0–255) so prompts are reversible and deterministic.
 - Deterministic weight init uses a fixed seed; override with `--seed` in generate_weights.py.
+
