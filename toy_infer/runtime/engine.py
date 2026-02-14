@@ -41,9 +41,15 @@ class Engine:
         top_p: float | None = None,
         greedy: bool = False,
     ) -> str:
-        tokens = np.array([self.tokenizer.encode(prompt)], dtype=np.int64)
-        logits, cache = self.prefill(tokens)
-        out_tokens: List[int] = tokens.tolist()[0]
+        encoded_prompt = self.tokenizer.encode(prompt)
+        if encoded_prompt:
+            tokens = np.array([encoded_prompt], dtype=np.int64)
+            logits, cache = self.prefill(tokens)
+            out_tokens: List[int] = encoded_prompt.copy()
+        else:
+            bootstrap = np.zeros((1, 1), dtype=np.int64)
+            logits, cache = self.prefill(bootstrap)
+            out_tokens = []
 
         for _ in range(max_new_tokens):
             last_logits = logits[:, -1, :]  # [batch, vocab]

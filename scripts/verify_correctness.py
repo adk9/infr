@@ -79,12 +79,11 @@ def _run_kv_equiv(cfg: ModelConfig, weights_path: str) -> Dict[str, np.ndarray]:
 
 
 def _load_golden(path: Path) -> Dict[str, np.ndarray | List[str]]:
-    with path.open("rb") as f:
-        data = np.load(f, allow_pickle=True)
     out: Dict[str, np.ndarray | List[str]] = {}
-    for key in data.files:
-        val = data[key].item() if data[key].shape == () else data[key]
-        out[key] = val
+    with np.load(path, allow_pickle=True) as data:
+        for key in data.files:
+            val = data[key].item() if data[key].shape == () else data[key]
+            out[key] = val
     return out
 
 
@@ -102,10 +101,19 @@ def _compare_arrays(name: str, ref: np.ndarray, cur: np.ndarray, atol: float, rt
 
 def _compare_texts(ref: List[str], cur: List[str]) -> List[str]:
     issues = []
+    if len(ref) != len(cur):
+        issues.append(f"generated_texts length mismatch: expected {len(ref)} got {len(cur)}")
+        return issues
     for i, (r, c) in enumerate(zip(ref, cur)):
         if r != c:
             issues.append(f"prompt {i} text mismatch: expected '{r}' got '{c}'")
     return issues
+
+
+def _as_text_list(value: np.ndarray | List[str]) -> List[str]:
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    return list(value)
 
 
 @app.command()
@@ -152,7 +160,7 @@ def verify(
     issues += _compare_arrays("forward_logits", golden_payload["forward_logits"], current["forward_logits"], atol, rtol)
     issues += _compare_arrays("kv_equiv_logits", golden_payload["kv_equiv_logits"], current["kv_equiv_logits"], atol, rtol)
     issues += _compare_arrays("full_tail_logits", golden_payload["full_tail_logits"], current["full_tail_logits"], atol, rtol)
-    issues += _compare_texts(golden_payload["generated_texts"].tolist(), current["generated_texts"])
+    issues += _compare_texts(_as_text_list(golden_payload["generated_texts"]), _as_text_list(current["generated_texts"]))
 
     if issues:
         for line in issues:
