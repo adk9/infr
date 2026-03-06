@@ -92,7 +92,13 @@ def main(
     eng = Engine(config, weights)
     sched = NaiveScheduler()
     for _ in range(requests):
-        sched.submit(Request(prompt="", max_new_tokens=gen_len, options={}))
+        sched.submit(
+            Request(
+                prompt=("x " * prompt_len).strip(),
+                max_new_tokens=gen_len,
+                options={"prompt_len": prompt_len, "batch_size": batch_size},
+            )
+        )
 
     results: List[BenchResult] = []
     profiler = None
@@ -100,8 +106,9 @@ def main(
         profiler = cProfile.Profile()
         profiler.enable()
 
-    for _ in sched.run():
-        res = bench_once(eng, prompt_len, gen_len)
+    for req in sched.run():
+        req_prompt_len = int(req.options.get("prompt_len", prompt_len))
+        res = bench_once(eng, req_prompt_len, req.max_new_tokens)
         results.append(res)
 
     if profile and profiler:
